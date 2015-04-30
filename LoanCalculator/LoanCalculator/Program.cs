@@ -10,44 +10,131 @@ namespace LoanCalculator
     {
         static void Main(string[] args)
         {
-        //    When complete, uncommenting these lines should result in two tables being displayed to the console.
-
-        //    Amortization table1 = new Amortization(new SerialLoan(10000, 0.02, 10));
-        //    Amortization table2 = new Amortization(new AnnuityLoan(10000, 0.02, 10));
-
-        //    table1.Print();
-        //    table2.Print();
+            //    When complete, uncommenting these lines should result in two tables being displayed to the console.
+            //creates new tables for any type of loan created
+            Amortization table1 = new Amortization(new SerialLoan(10000, 0.02, 10));
+            Amortization table2 = new Amortization(new AnnuityLoan(10000, 0.02, 10));
+            //calls print function in amortization
+            table1.Print();
+            table2.Print();
+            
 
         }
     }
 
- 
 
-    public interface ILoan {
-        //defind the interface for a Loan here
+    //Creates a template for interfacing with different kinds of loans
+    public interface ILoan
+    {
+        //define the interface for a Loan here
+        //Principal of loan
+        double Principal { get; set; }
+        //rate of interest
+        double Rate { get; set; }
+        //number of periods to pay
+        int Periods { get; set; }
+
+        //payment number
+        double Payment(int n);
+        //calculates interest on loan
+        double Interest(int n);
+        //calculates outstanding balance
+        double Outstanding(int n);
+        double Repayment(int n);
     }
 
-
-    public class SerialLoan
+    /// <summary>
+    /// Creates serial loan class
+    /// </summary>
+    public class SerialLoan : ILoan
     {
-        //implement the interface here for a Serial Loan
+      
+        public double Principal { get; set; }
+        public double Rate { get; set; }
+        public int Periods { get; set; }
+        //implement the interface here for a Serial Loan.
+        //constructor
+        public SerialLoan(double principalAmount, double rate, int periods)
+        {
+            this.Principal = principalAmount;
+            this.Rate = rate;
+            this.Periods = periods;
+
+        }
+        //calculates this payment
+        public double Payment(int n)
+        {
+            return Repayment(n) + Interest(n);
+        }
+
+        //calculate interest based on current total
+        public double Interest(int n)
+        {
+            return Outstanding(n - 1) * Rate;
+        }
+        //remaining balance
+        public double Outstanding(int n)
+        {
+            return Repayment(0) * (Periods - n);
+        }
+        public double Repayment(int n)
+        {
+            return Principal / Periods;
+        }
+
+
+
+
+
     }
-
-    public class AnnuityLoan
+    //logic for annuity loan
+    public class AnnuityLoan: ILoan
     {
+        public double Principal { get; set; }
+        public double Rate { get; set; }
+        public int Periods { get; set; }
+
+       
         //implement the interface here for an Annuity Loan
+        //constructor
+        public AnnuityLoan(double principal, double rate, int period)
+        {
+            this.Principal = principal;
+            this.Rate = rate;
+            this.Periods = period;
+
+        }
+        //calculate payment
+        public double Payment(int n)
+        {
+            return Principal * Rate / (1 - Math.Pow(1 + Rate, -Periods));
+        }
+        //calculate current interest based on total
+        public double Interest(int n)
+        {
+            return Outstanding(n-1) * Rate;
+        }
+        //calculate remaining balance
+        public double Outstanding(int n){
+            return Principal * Math.Pow(1 + Rate, n) - Payment(0) * (Math.Pow(1 + Rate, n) - 1) / Rate;
+        }
+        public double Repayment(int n)
+        {
+            return Payment(n) + Interest(n);
+        }
     }
 
-   
 
+    //Display calculations
     public class Amortization
     {
+        //instance of ILoan
         private ILoan loan;
         public Amortization(ILoan loan)
         {
             this.loan = loan;
         }
-
+        //print results
         public void Print()
         {
             Console.WriteLine("Principal: {0, 18:F}", loan.Principal);
